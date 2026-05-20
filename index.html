@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Self Inflicted Vandalism — Mini Book</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <h1>Self Inflicted Vandalism</h1>
+      <p class="tag">Mini-book pour tattoo artist — flash QR</p>
+      <div class="controls">
+        <button id="modeThumb">Miniatures</button>
+        <button id="modeFull">Full (Carousel)</button>
+        <button id="flipH" title="Retourner horizontalement">Flip H</button>
+        <button id="flipV" title="Retourner verticalement">Flip V</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="galleryThumbs" class="thumbs grid"></section>
+
+      <div id="carouselModal" class="modal hidden" aria-hidden="true">
+        <button id="closeCarousel" class="modal-close">×</button>
+        <div class="carousel">
+          <button id="prev" class="nav left">‹</button>
+          <div id="carouselView" class="viewport"></div>
+          <button id="next" class="nav right">›</button>
+        </div>
+      </div>
+
+      <div id="zoomModal" class="modal hidden" aria-hidden="true">
+        <button id="closeZoom" class="modal-close">×</button>
+        <div id="zoomArea" class="zoom-area">
+          <img id="zoomImg" src="" alt="" />
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <small>Le QR code pointera vers le book entier. Les planches sont lues automatiquement depuis <code>images/Siv</code>.</small>
+    </footer>
+  </div>
+
+  <script src="images/Siv/manifest.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

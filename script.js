@@ -1,4 +1,4 @@
-const MANIFEST_IMAGES = Array.isArray(window.BOOK_IMAGES) ? window.BOOK_IMAGES : [];
+const MANIFEST_SHEETS = Array.isArray(window.BOOK_SHEETS) ? window.BOOK_SHEETS : [];
 
 const thumbs = document.getElementById('galleryThumbs');
 const modeThumb = document.getElementById('modeThumb');
@@ -12,36 +12,41 @@ const zoomModal = document.getElementById('zoomModal');
 const zoomImg = document.getElementById('zoomImg');
 const closeZoom = document.getElementById('closeZoom');
 
-let images = MANIFEST_IMAGES;
+let sheets = MANIFEST_SHEETS;
 let current = 0;
 let zoomState = { scale: 1, x: 0, y: 0 };
 let panning = false;
 let startX = 0;
 let startY = 0;
+let activePointers = new Map();
+let pinchState = null;
 
 function setCarouselImage() {
   carouselView.innerHTML = '';
   const img = document.createElement('img');
-  img.src = images[current];
-  img.alt = `Planche ${current + 1}`;
-  img.addEventListener('dblclick', () => openZoom(images[current]));
+  const sheet = sheets[current];
+  img.src = sheet.full;
+  img.alt = sheet.name || `Planche ${current + 1}`;
+  img.loading = 'eager';
+  img.decoding = 'async';
+  img.addEventListener('click', () => openZoom(sheet.full));
   carouselView.appendChild(img);
 }
 
 function renderThumbs() {
   thumbs.innerHTML = '';
-  images.forEach((src, i) => {
+  sheets.forEach((sheet, i) => {
     const button = document.createElement('button');
     button.className = 'thumb';
     button.style.border = 'none';
     button.style.padding = '0';
 
     const img = document.createElement('img');
-    img.src = src;
-    img.alt = `Planche ${i + 1}`;
+    img.src = sheet.thumb;
+    img.alt = sheet.name || `Planche ${i + 1}`;
     img.loading = 'lazy';
+    img.decoding = 'async';
     img.addEventListener('click', () => openCarousel(i));
-    img.addEventListener('dblclick', () => openZoom(src));
 
     button.appendChild(img);
     thumbs.appendChild(button);
@@ -61,8 +66,11 @@ function closeCarouselFn() {
 }
 
 function openZoom(src) {
+  closeCarouselFn();
   zoomImg.src = src;
   zoomState = { scale: 1, x: 0, y: 0 };
+  activePointers = new Map();
+  pinchState = null;
   renderZoomTransform();
   zoomModal.classList.remove('hidden');
 }
@@ -80,12 +88,12 @@ function renderZoomTransform() {
 }
 
 function loadImagesFallback() {
-  images = [];
+  sheets = [];
   thumbs.innerHTML = '<p class="empty">Aucune planche trouvée dans <code>images/Siv</code>.</p>';
 }
 
 function init() {
-  if (!images.length) {
+  if (!sheets.length) {
     loadImagesFallback();
     return;
   }
@@ -95,25 +103,64 @@ function init() {
 }
 
 prevBtn.addEventListener('click', () => {
-  current = (current - 1 + images.length) % images.length;
+  current = (current - 1 + sheets.length) % sheets.length;
   setCarouselImage();
 });
 nextBtn.addEventListener('click', () => {
-  current = (current + 1) % images.length;
+  current = (current + 1) % sheets.length;
   setCarouselImage();
 });
 closeCarousel.addEventListener('click', closeCarouselFn);
 closeZoom.addEventListener('click', closeZoomFn);
 
+function updateZoomFromPointers() {
+  if (activePointers.size < 2 || !pinchState) return;
+  const pts = Array.from(activePointers.values());
+  const [a, b] = pts;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const dist = Math.hypot(dx, dy);
+  const midX = (a.x + b.x) / 2;
+  const midY = (a.y + b.y) / 2;
+
+  zoomState.scale = clamp(pinchState.scale * (dist / pinchState.dist), 1, 6);
+  zoomState.x = pinchState.x + (midX - pinchState.midX);
+  zoomState.y = pinchState.y + (midY - pinchState.midY);
+  renderZoomTransform();
+}
+
 zoomImg.addEventListener('pointerdown', (e) => {
-  panning = true;
   zoomImg.setPointerCapture(e.pointerId);
-  startX = e.clientX;
-  startY = e.clientY;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activePointers.size === 1) {
+    panning = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    pinchState = null;
+  }
+  if (activePointers.size === 2) {
+    const pts = Array.from(activePointers.values());
+    const [a, b] = pts;
+    pinchState = {
+      dist: Math.hypot(b.x - a.x, b.y - a.y) || 1,
+      scale: zoomState.scale,
+      x: zoomState.x,
+      y: zoomState.y,
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+    };
+    panning = false;
+  }
 });
 
 zoomImg.addEventListener('pointermove', (e) => {
-  if (!panning) return;
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activePointers.size === 2 && pinchState) {
+    updateZoomFromPointers();
+    return;
+  }
+  if (!panning || activePointers.size !== 1) return;
   const dx = e.clientX - startX;
   const dy = e.clientY - startY;
   zoomState.x += dx;
@@ -124,12 +171,20 @@ zoomImg.addEventListener('pointermove', (e) => {
 });
 
 zoomImg.addEventListener('pointerup', (e) => {
-  panning = false;
+  activePointers.delete(e.pointerId);
+  if (activePointers.size < 2) pinchState = null;
+  if (activePointers.size === 0) panning = false;
   try {
     zoomImg.releasePointerCapture(e.pointerId);
   } catch (_) {
     // noop
   }
+});
+
+zoomImg.addEventListener('pointercancel', (e) => {
+  activePointers.delete(e.pointerId);
+  if (activePointers.size < 2) pinchState = null;
+  if (activePointers.size === 0) panning = false;
 });
 
 zoomImg.addEventListener('wheel', (e) => {

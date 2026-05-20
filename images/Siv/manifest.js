@@ -1,37 +1,177 @@
-window.BOOK_IMAGES = [
-  "images/Siv/IMG_0236.PNG",
-  "images/Siv/IMG_0239.PNG",
-  "images/Siv/IMG_0240.PNG",
-  "images/Siv/IMG_0246.PNG",
-  "images/Siv/IMG_0247.PNG",
-  "images/Siv/IMG_0248.PNG",
-  "images/Siv/IMG_0249.PNG",
-  "images/Siv/IMG_0250.PNG",
-  "images/Siv/IMG_0450.PNG",
-  "images/Siv/IMG_0453.PNG",
-  "images/Siv/IMG_0756.PNG",
-  "images/Siv/IMG_0758.PNG",
-  "images/Siv/IMG_6540_Original.PNG",
-  "images/Siv/IMG_6542_Original.PNG",
-  "images/Siv/IMG_6543_Original.PNG",
-  "images/Siv/IMG_6585_Original.PNG",
-  "images/Siv/IMG_7644.PNG",
-  "images/Siv/IMG_7645.PNG",
-  "images/Siv/IMG_7646.PNG",
-  "images/Siv/IMG_7647.PNG",
-  "images/Siv/IMG_7654.PNG",
-  "images/Siv/IMG_7855.PNG",
-  "images/Siv/IMG_8313.PNG",
-  "images/Siv/IMG_8977.PNG",
-  "images/Siv/IMG_8989.PNG",
-  "images/Siv/IMG_9050.PNG",
-  "images/Siv/IMG_9141.PNG",
-  "images/Siv/IMG_9142.PNG",
-  "images/Siv/IMG_9165.PNG",
-  "images/Siv/IMG_9198.PNG",
-  "images/Siv/IMG_9208.PNG",
-  "images/Siv/IMG_9259.PNG",
-  "images/Siv/IMG_9273.PNG",
-  "images/Siv/IMG_9278.PNG",
-  "images/Siv/IMG_9279.PNG"
+window.BOOK_SHEETS = [
+  {
+    "name": "IMG_0236.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0236.webp",
+    "full": "images/Siv/IMG_0236.PNG"
+  },
+  {
+    "name": "IMG_0239.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0239.webp",
+    "full": "images/Siv/IMG_0239.PNG"
+  },
+  {
+    "name": "IMG_0240.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0240.webp",
+    "full": "images/Siv/IMG_0240.PNG"
+  },
+  {
+    "name": "IMG_0246.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0246.webp",
+    "full": "images/Siv/IMG_0246.PNG"
+  },
+  {
+    "name": "IMG_0247.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0247.webp",
+    "full": "images/Siv/IMG_0247.PNG"
+  },
+  {
+    "name": "IMG_0248.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0248.webp",
+    "full": "images/Siv/IMG_0248.PNG"
+  },
+  {
+    "name": "IMG_0249.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0249.webp",
+    "full": "images/Siv/IMG_0249.PNG"
+  },
+  {
+    "name": "IMG_0250.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0250.webp",
+    "full": "images/Siv/IMG_0250.PNG"
+  },
+  {
+    "name": "IMG_0450.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0450.webp",
+    "full": "images/Siv/IMG_0450.PNG"
+  },
+  {
+    "name": "IMG_0453.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0453.webp",
+    "full": "images/Siv/IMG_0453.PNG"
+  },
+  {
+    "name": "IMG_0756.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0756.webp",
+    "full": "images/Siv/IMG_0756.PNG"
+  },
+  {
+    "name": "IMG_0758.PNG",
+    "thumb": "images/Siv/thumbs/IMG_0758.webp",
+    "full": "images/Siv/IMG_0758.PNG"
+  },
+  {
+    "name": "IMG_6540_Original.PNG",
+    "thumb": "images/Siv/thumbs/IMG_6540_Original.webp",
+    "full": "images/Siv/IMG_6540_Original.PNG"
+  },
+  {
+    "name": "IMG_6542_Original.PNG",
+    "thumb": "images/Siv/thumbs/IMG_6542_Original.webp",
+    "full": "images/Siv/IMG_6542_Original.PNG"
+  },
+  {
+    "name": "IMG_6543_Original.PNG",
+    "thumb": "images/Siv/thumbs/IMG_6543_Original.webp",
+    "full": "images/Siv/IMG_6543_Original.PNG"
+  },
+  {
+    "name": "IMG_6585_Original.PNG",
+    "thumb": "images/Siv/thumbs/IMG_6585_Original.webp",
+    "full": "images/Siv/IMG_6585_Original.PNG"
+  },
+  {
+    "name": "IMG_7644.PNG",
+    "thumb": "images/Siv/thumbs/IMG_7644.webp",
+    "full": "images/Siv/IMG_7644.PNG"
+  },
+  {
+    "name": "IMG_7645.PNG",
+    "thumb": "images/Siv/thumbs/IMG_7645.webp",
+    "full": "images/Siv/IMG_7645.PNG"
+  },
+  {
+    "name": "IMG_7646.PNG",
+    "thumb": "images/Siv/thumbs/IMG_7646.webp",
+    "full": "images/Siv/IMG_7646.PNG"
+  },
+  {
+    "name": "IMG_7647.PNG",
+    "thumb": "images/Siv/thumbs/IMG_7647.webp",
+    "full": "images/Siv/IMG_7647.PNG"
+  },
+  {
+    "name": "IMG_7654.PNG",
+    "thumb": "images/Siv/thumbs/IMG_7654.webp",
+    "full": "images/Siv/IMG_7654.PNG"
+  },
+  {
+    "name": "IMG_7855.PNG",
+    "thumb": "images/Siv/thumbs/IMG_7855.webp",
+    "full": "images/Siv/IMG_7855.PNG"
+  },
+  {
+    "name": "IMG_8313.PNG",
+    "thumb": "images/Siv/thumbs/IMG_8313.webp",
+    "full": "images/Siv/IMG_8313.PNG"
+  },
+  {
+    "name": "IMG_8977.PNG",
+    "thumb": "images/Siv/thumbs/IMG_8977.webp",
+    "full": "images/Siv/IMG_8977.PNG"
+  },
+  {
+    "name": "IMG_8989.PNG",
+    "thumb": "images/Siv/thumbs/IMG_8989.webp",
+    "full": "images/Siv/IMG_8989.PNG"
+  },
+  {
+    "name": "IMG_9050.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9050.webp",
+    "full": "images/Siv/IMG_9050.PNG"
+  },
+  {
+    "name": "IMG_9141.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9141.webp",
+    "full": "images/Siv/IMG_9141.PNG"
+  },
+  {
+    "name": "IMG_9142.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9142.webp",
+    "full": "images/Siv/IMG_9142.PNG"
+  },
+  {
+    "name": "IMG_9165.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9165.webp",
+    "full": "images/Siv/IMG_9165.PNG"
+  },
+  {
+    "name": "IMG_9198.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9198.webp",
+    "full": "images/Siv/IMG_9198.PNG"
+  },
+  {
+    "name": "IMG_9208.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9208.webp",
+    "full": "images/Siv/IMG_9208.PNG"
+  },
+  {
+    "name": "IMG_9259.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9259.webp",
+    "full": "images/Siv/IMG_9259.PNG"
+  },
+  {
+    "name": "IMG_9273.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9273.webp",
+    "full": "images/Siv/IMG_9273.PNG"
+  },
+  {
+    "name": "IMG_9278.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9278.webp",
+    "full": "images/Siv/IMG_9278.PNG"
+  },
+  {
+    "name": "IMG_9279.PNG",
+    "thumb": "images/Siv/thumbs/IMG_9279.webp",
+    "full": "images/Siv/IMG_9279.PNG"
+  }
 ];

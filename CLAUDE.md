@@ -10,7 +10,8 @@ But: fournir un mini-book en ligne, mobile-first, pour un tattoo artist. Contenu
 
 Notes techniques / suggestions:
 - Site statique simple (HTML/CSS/JS) — facile et gratuit à héberger (GitHub Pages / Netlify / Cloudflare Pages / GitLab Pages)
-- Les images doivent être optimisées (webp ou jpg compressé) et rangées dans `images/Siv/`
+- Les miniatures sont générées en WebP dans `images/Siv/thumbs/`
+- Le plein format reste l'image originale, chargée à la demande pour conserver le zoom utile
 - Le site charge automatiquement `images/Siv/manifest.js` généré à partir du dossier.
 - J'ai inclus un simple viewer dans `index.html` + `script.js`.
 - Pour l'édition locale, j'utilise `exa` pour lister les images rapidement et `context7` si vous me le demandez (outils CLI optionnels).

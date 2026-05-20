@@ -3,7 +3,8 @@ Self Inflicted Vandalism — Mini Book
 Aperçu
 - Mini-site statique responsive pour présenter des feuilles A4 de flashs tattoo.
 - Modes: miniatures (grid) et full (carousel). Double-clic/double-tap pour zoomer.
-- Les images sont lues automatiquement depuis `images/Siv` via `images/Siv/manifest.js`.
+- Les miniatures sont générées en WebP depuis `images/Siv` via `images/Siv/manifest.js`.
+- La vue full ouvre l'image originale à la demande, pour garder le zoom utile sans charger toute la galerie en même temps.
 
 QR code
 - Un seul QR code doit pointer vers la page d'accueil du book entier.
@@ -11,7 +12,7 @@ QR code
 
 Installation & aperçu local
 1. Placez vos planches dans `images/Siv/`.
-2. Régénérez le manifeste avec `npm run build:manifest` si vous ajoutez ou renommez des images.
+2. Régénérez les assets avec `npm run build:assets` si vous ajoutez ou renommez des images.
 3. Ouvrez `index.html` dans un navigateur (double-cliquez ou `python3 -m http.server` pour un serveur simple).
 
 Hébergement gratuit (rapide)
@@ -36,7 +37,7 @@ Extensions recommandées
 	Vous pouvez ajouter une recommandation d'extensions au workspace: voir `.vscode/extensions.json`.
 
 Optimisations recommandées
-- Convertir les planches en WebP pour réduire le poids
+- Garder les originaux pour le zoom, mais utiliser les miniatures WebP générées pour la grille
 - Redimensionner les images à une largeur raisonnable (par ex. 2400px pour A4 scans)
 
 À faire ensuite

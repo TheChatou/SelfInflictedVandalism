@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build:assets": "python3 scripts/generate-assets.py",
-    "build:manifest": "python3 scripts/generate-assets.py",
     "preview": "python3 -m http.server 4173"
   }
 }

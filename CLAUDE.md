@@ -14,13 +14,6 @@ Notes techniques / suggestions:
 - Le plein format reste l'image originale, chargée à la demande pour conserver le zoom utile
 - Le site charge automatiquement `images/Siv/manifest.js` généré à partir du dossier.
 - J'ai inclus un simple viewer dans `index.html` + `script.js`.
-- Pour l'édition locale, j'utilise `exa` pour lister les images rapidement et `context7` si vous me le demandez (outils CLI optionnels).
-
-Plugin Anthropic Frontend-Design:
-- Installation recommandée: installez l'extension VS Code "Anthropic Frontend-Design" depuis le marketplace (`/marketplace/frontend-design`).
-- J'ai ajouté une recommandation workspace dans `.vscode/extensions.json` pour proposer automatiquement l'extension aux contributeurs.
-- Si vous préférez un package npm ou une intégration différente, dites-moi laquelle et j'ajouterai les instructions d'installation.
-
 Déploiement rapide (suggestion):
 - Hébergement gratuit: GitHub Pages (simple), Netlify (CI + déploiement continu), Cloudflare Pages (performances), GitLab Pages (alternative simple)
 - Je recommande GitHub Pages pour commencer: il suffit de push et d'activer Pages depuis `main` branch.

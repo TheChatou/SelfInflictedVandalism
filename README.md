@@ -16,7 +16,7 @@ Installation & aperçu local
 3. Ouvrez `index.html` dans un navigateur (double-cliquez ou `python3 -m http.server` pour un serveur simple).
 
 Hébergement gratuit (rapide)
-- GitHub Pages: push repo -> Settings -> Pages -> Source: Deploy from a branch -> Branch: `main` / Folder: `/root` -> Save.
+- GitHub Pages: push repo -> Settings -> Pages -> Source: Deploy from a branch -> Branch: `main` / Folder: `/ (root)` -> Save.
 - Netlify: drag & drop du dossier `dist` ou connectez le repo pour déploiement automatique.
 - Cloudflare Pages: connecter le repo et configurer build (site static simple, pas de build si pur HTML/CSS/JS).
 - GitLab Pages: bonne alternative gratuite si le repo est déjà sur GitLab.
@@ -28,13 +28,9 @@ Recommandation simple
 Checklist GitHub Pages
 1. Mettre le code dans un dépôt GitHub.
 2. Pousser la branche `main`.
-3. Activer Pages avec la branche `main` et le dossier `/root`.
+3. Activer Pages avec la branche `main` et le dossier `/ (root)`.
 4. Récupérer l'URL publique du type `https://<votre-compte>.github.io/<repo>/`.
 5. Générer le QR code du book entier à partir de cette URL.
-
-Extensions recommandées
-- VS Code Frontend-Design: installez l'extension marketplace `/marketplace/frontend-design` (ou cherchez "Anthropic Frontend-Design").
-	Vous pouvez ajouter une recommandation d'extensions au workspace: voir `.vscode/extensions.json`.
 
 Optimisations recommandées
 - Garder les originaux pour le zoom, mais utiliser les miniatures WebP générées pour la grille

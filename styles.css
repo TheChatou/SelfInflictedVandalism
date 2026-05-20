@@ -17,15 +17,24 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neu
 .thumbs img{width:100%;height:110px;object-fit:cover;border-radius:4px;background:#222}
 
 /* Modal backdrop */
-.modal{position:fixed;inset:0;display:flex;align-items:stretch;justify-content:center;background:rgba(0,0,0,0.95);z-index:50}
+.modal{position:fixed;inset:0;display:flex;align-items:stretch;justify-content:center;background:rgba(0,0,0,0.95);z-index:50;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .hidden{display:none}
 .modal-close{position:fixed;right:14px;top:14px;font-size:28px;line-height:1;background:rgba(0,0,0,0.5);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;z-index:60;display:flex;align-items:center;justify-content:center}
 
 /* Carousel */
 .carousel{position:relative;width:100%;display:flex;align-items:center;justify-content:center}
-.viewport{width:100%;height:100svh;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;cursor:grab;user-select:none}
+.viewport{width:100%;height:100svh;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .viewport.grabbing{cursor:grabbing}
-.viewport img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;user-select:none;-webkit-user-drag:none;transform-origin:center center;will-change:transform;display:block;pointer-events:none}
+.viewport img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;transform-origin:center center;will-change:transform;display:block;pointer-events:none}
+
+/* Swipe hint animation */
+@keyframes swipe-hint{
+  0%   { transform: translate(0,0)    scale(1) }
+  25%  { transform: translate(-24px,0) scale(1) }
+  75%  { transform: translate(24px,0)  scale(1) }
+  100% { transform: translate(0,0)    scale(1) }
+}
+.viewport img.hinting{animation:swipe-hint 0.8s ease-in-out infinite}
 
 /* Nav arrows — overlay on image */
 .nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;z-index:55;display:flex;align-items:center;justify-content:center;transition:opacity 0.15s,transform 0.15s}

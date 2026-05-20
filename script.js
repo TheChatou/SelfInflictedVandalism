@@ -11,12 +11,13 @@ let sheets  = MANIFEST_SHEETS;
 let current = 0;
 
 // ── Gesture state ─────────────────────────────────────────────────────────────
-let zoom   = { scale: 1, x: 0, y: 0 };
-let ptrs   = new Map();   // pointerId → {x, y}
-let gMode  = 'idle';      // 'idle' | 'swipe' | 'pan' | 'pinch'
-let swipeO = null;        // {x, y} — origin of swipe gesture
-let panO   = null;        // {x, y, ox, oy} — origin + initial translate
-let pinchO = null;        // {dist, scale, x, y, midX, midY}
+let zoom      = { scale: 1, x: 0, y: 0 };
+let ptrs      = new Map();   // pointerId → {x, y}
+let gMode     = 'idle';      // 'idle' | 'swipe' | 'pan' | 'pinch'
+let swipeO    = null;        // {x, y} — origin of swipe gesture
+let panO      = null;        // {x, y, ox, oy} — origin + initial translate
+let pinchO    = null;        // {dist, scale, x, y, midX, midY}
+let hintTimer = null;
 
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
@@ -30,7 +31,22 @@ function setArrows(show) {
   nextBtn.classList.toggle('hidden', !show);
 }
 
+function startHint() {
+  const img = carouselView.querySelector('img');
+  if (!img || gMode !== 'swipe') return;
+  img.style.transform = '';
+  img.classList.add('hinting');
+}
+
+function stopHint() {
+  clearTimeout(hintTimer);
+  hintTimer = null;
+  const img = carouselView.querySelector('img');
+  if (img) img.classList.remove('hinting');
+}
+
 function resetGesture() {
+  stopHint();
   zoom   = { scale: 1, x: 0, y: 0 };
   ptrs   = new Map();
   gMode  = 'idle';
@@ -71,9 +87,11 @@ carouselView.addEventListener('pointerdown', (e) => {
     panO   = { x: e.clientX, y: e.clientY, ox: zoom.x, oy: zoom.y };
     gMode  = zoom.scale > 1.02 ? 'pan' : 'swipe';
     pinchO = null;
+    if (gMode === 'swipe') hintTimer = setTimeout(startHint, 250);
   }
 
   if (ptrs.size === 2) {
+    stopHint();
     gMode  = 'pinch';
     swipeO = null;
     const [a, b] = [...ptrs.values()];
@@ -90,6 +108,13 @@ carouselView.addEventListener('pointerdown', (e) => {
 carouselView.addEventListener('pointermove', (e) => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  // Stop hint as soon as finger moves intentionally
+  if (gMode === 'swipe' && swipeO) {
+    const dx = e.clientX - swipeO.x;
+    const dy = e.clientY - swipeO.y;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) stopHint();
+  }
 
   if (gMode === 'pinch' && pinchO && ptrs.size >= 2) {
     const [a, b] = [...ptrs.values()];
@@ -118,6 +143,7 @@ carouselView.addEventListener('pointerup', (e) => {
   try { carouselView.releasePointerCapture(e.pointerId); } catch (_) {}
 
   if (ptrs.size === 0) {
+    stopHint();
     carouselView.classList.remove('grabbing');
 
     if (savedMode === 'swipe' && savedSwipe) {
@@ -147,6 +173,7 @@ carouselView.addEventListener('pointerup', (e) => {
 carouselView.addEventListener('pointercancel', (e) => {
   ptrs.delete(e.pointerId);
   if (ptrs.size === 0) {
+    stopHint();
     carouselView.classList.remove('grabbing');
     setArrows(zoom.scale <= 1);
     gMode  = 'idle';

@@ -13,7 +13,6 @@ const zoomImg = document.getElementById('zoomImg');
 const closeZoom = document.getElementById('closeZoom');
 const flipHBtn = document.getElementById('flipH');
 const flipVBtn = document.getElementById('flipV');
-const app = document.getElementById('app');
 
 let images = MANIFEST_IMAGES;
 let current = 0;
@@ -199,7 +198,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'v' || e.key === 'V') toggleFlipV();
 });
 
-/* Portrait lock: try Screen Orientation API, fallback to visual rotate/scale */
+/* Portrait lock: try Screen Orientation API only (no transform fallback) */
 async function enforcePortraitLock() {
   try {
     if (screen.orientation && screen.orientation.lock) {
@@ -208,32 +207,6 @@ async function enforcePortraitLock() {
     }
   } catch (e) {
     // not available / not allowed
-  }
-
-  document.documentElement.classList.add('force-portrait');
-  applyPortraitTransform();
-  window.addEventListener('resize', applyPortraitTransform);
-  window.addEventListener('orientationchange', applyPortraitTransform);
-}
-
-function applyPortraitTransform() {
-  if (!app) return;
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-
-  if (w > h) {
-    const scale = h / w;
-    app.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${scale})`;
-    app.style.transformOrigin = 'center center';
-    app.style.position = 'fixed';
-    app.style.left = '50%';
-    app.style.top = '50%';
-  } else {
-    app.style.transform = '';
-    app.style.transformOrigin = '';
-    app.style.position = '';
-    app.style.left = '';
-    app.style.top = '';
   }
 }
 

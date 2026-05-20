@@ -1,8 +1,6 @@
 const MANIFEST_SHEETS = Array.isArray(window.BOOK_SHEETS) ? window.BOOK_SHEETS : [];
 
 const thumbs = document.getElementById('galleryThumbs');
-const modeThumb = document.getElementById('modeThumb');
-const modeFull = document.getElementById('modeFull');
 const carouselModal = document.getElementById('carouselModal');
 const carouselView = document.getElementById('carouselView');
 const prevBtn = document.getElementById('prev');
@@ -193,11 +191,6 @@ zoomImg.addEventListener('wheel', (e) => {
   zoomState.scale = clamp(zoomState.scale + delta, 1, 6);
   renderZoomTransform();
 }, { passive: false });
-
-modeThumb.addEventListener('click', () => {
-  document.getElementById('galleryThumbs').scrollIntoView({ behavior: 'smooth' });
-});
-modeFull.addEventListener('click', () => openCarousel(0));
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {

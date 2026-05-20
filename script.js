@@ -11,18 +11,20 @@ let sheets  = MANIFEST_SHEETS;
 let current = 0;
 
 // ── Gesture state ─────────────────────────────────────────────────────────────
-let zoom      = { scale: 1, x: 0, y: 0 };
-let ptrs      = new Map();   // pointerId → {x, y}
-let gMode     = 'idle';      // 'idle' | 'swipe' | 'pan' | 'pinch'
-let swipeO    = null;        // {x, y} — origin of swipe gesture
-let panO      = null;        // {x, y, ox, oy} — origin + initial translate
-let pinchO    = null;        // {dist, scale, x, y, midX, midY}
-let hintTimer = null;
+let zoom     = { scale: 1, x: 0, y: 0 };
+let ptrs     = new Map();   // pointerId → {x, y}
+let gMode    = 'idle';      // 'idle' | 'swipe' | 'pan' | 'pinch'
+let swipeO   = null;        // {x, y} — swipe start
+let panO     = null;        // {x, y, ox, oy} — pan start + initial offset
+let pinchO   = null;        // pinch start state
+let navTimer = null;        // pending navigate() after exit animation
 
 function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
+function getImg() { return carouselView.querySelector('img'); }
+
 function applyTransform() {
-  const img = carouselView.querySelector('img');
+  const img = getImg();
   if (img) img.style.transform = `translate(${zoom.x}px,${zoom.y}px) scale(${zoom.scale})`;
 }
 
@@ -31,22 +33,13 @@ function setArrows(show) {
   nextBtn.classList.toggle('hidden', !show);
 }
 
-function startHint() {
-  const img = carouselView.querySelector('img');
-  if (!img || gMode !== 'swipe') return;
-  img.style.transform = '';
-  img.classList.add('hinting');
-}
-
-function stopHint() {
-  clearTimeout(hintTimer);
-  hintTimer = null;
-  const img = carouselView.querySelector('img');
-  if (img) img.classList.remove('hinting');
+function cancelNav() {
+  clearTimeout(navTimer);
+  navTimer = null;
 }
 
 function resetGesture() {
-  stopHint();
+  cancelNav();
   zoom   = { scale: 1, x: 0, y: 0 };
   ptrs   = new Map();
   gMode  = 'idle';
@@ -87,11 +80,9 @@ carouselView.addEventListener('pointerdown', (e) => {
     panO   = { x: e.clientX, y: e.clientY, ox: zoom.x, oy: zoom.y };
     gMode  = zoom.scale > 1.02 ? 'pan' : 'swipe';
     pinchO = null;
-    if (gMode === 'swipe') hintTimer = setTimeout(startHint, 250);
   }
 
   if (ptrs.size === 2) {
-    stopHint();
     gMode  = 'pinch';
     swipeO = null;
     const [a, b] = [...ptrs.values()];
@@ -108,13 +99,6 @@ carouselView.addEventListener('pointerdown', (e) => {
 carouselView.addEventListener('pointermove', (e) => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-  // Stop hint as soon as finger moves intentionally
-  if (gMode === 'swipe' && swipeO) {
-    const dx = e.clientX - swipeO.x;
-    const dy = e.clientY - swipeO.y;
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) stopHint();
-  }
 
   if (gMode === 'pinch' && pinchO && ptrs.size >= 2) {
     const [a, b] = [...ptrs.values()];
@@ -133,6 +117,14 @@ carouselView.addEventListener('pointermove', (e) => {
     zoom.x = panO.ox + (e.clientX - panO.x);
     zoom.y = panO.oy + (e.clientY - panO.y);
     applyTransform();
+    return;
+  }
+
+  // Swipe: image follows finger in real time
+  if (gMode === 'swipe' && swipeO && ptrs.size === 1) {
+    const dx  = e.clientX - swipeO.x;
+    const img = getImg();
+    if (img) img.style.transform = `translate(${dx}px,0) scale(1)`;
   }
 });
 
@@ -143,17 +135,34 @@ carouselView.addEventListener('pointerup', (e) => {
   try { carouselView.releasePointerCapture(e.pointerId); } catch (_) {}
 
   if (ptrs.size === 0) {
-    stopHint();
     carouselView.classList.remove('grabbing');
 
     if (savedMode === 'swipe' && savedSwipe) {
-      const dx = e.clientX - savedSwipe.x;
-      const dy = e.clientY - savedSwipe.y;
-      // Swipe: horizontal dominance + minimum distance
-      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-        navigate(dx < 0 ? 1 : -1);
-        return;
+      const dx    = e.clientX - savedSwipe.x;
+      const dy    = e.clientY - savedSwipe.y;
+      const viewW = carouselView.offsetWidth;
+      const img   = getImg();
+
+      // Navigate if horizontal dominates and distance > 28% of screen
+      if (Math.abs(dx) > viewW * 0.28 && Math.abs(dx) > Math.abs(dy) * 1.2 && img) {
+        const exitX = dx < 0 ? -viewW : viewW;
+        img.style.transition = 'transform 0.18s ease-out';
+        img.style.transform  = `translate(${exitX}px,0) scale(1)`;
+        navTimer = setTimeout(() => {
+          navTimer = null;
+          navigate(dx < 0 ? 1 : -1);
+        }, 185);
+      } else if (img) {
+        // Snap back to center
+        img.style.transition = 'transform 0.25s ease-out';
+        img.style.transform  = 'translate(0,0) scale(1)';
+        img.addEventListener('transitionend', () => { img.style.transition = ''; }, { once: true });
+        setArrows(true);
       }
+
+      gMode = 'idle';
+      swipeO = panO = null;
+      return;
     }
 
     setArrows(zoom.scale <= 1);
@@ -161,7 +170,6 @@ carouselView.addEventListener('pointerup', (e) => {
     swipeO = panO = pinchO = null;
 
   } else if (ptrs.size === 1) {
-    // One finger lifted during pinch → back to pan or swipe with remaining finger
     pinchO = null;
     const [pt] = ptrs.values();
     panO   = { x: pt.x, y: pt.y, ox: zoom.x, oy: zoom.y };
@@ -171,9 +179,15 @@ carouselView.addEventListener('pointerup', (e) => {
 });
 
 carouselView.addEventListener('pointercancel', (e) => {
+  const img = getImg();
   ptrs.delete(e.pointerId);
   if (ptrs.size === 0) {
-    stopHint();
+    // Snap back if mid-swipe
+    if (gMode === 'swipe' && img) {
+      img.style.transition = 'transform 0.25s ease-out';
+      img.style.transform  = 'translate(0,0) scale(1)';
+      img.addEventListener('transitionend', () => { img.style.transition = ''; }, { once: true });
+    }
     carouselView.classList.remove('grabbing');
     setArrows(zoom.scale <= 1);
     gMode  = 'idle';
@@ -228,9 +242,9 @@ closeCarousel.addEventListener('click', closeCarouselFn);
 
 document.addEventListener('keydown', (e) => {
   if (carouselModal.classList.contains('hidden')) return;
-  if (e.key === 'Escape')      closeCarouselFn();
-  if (e.key === 'ArrowRight')  navigate(1);
-  if (e.key === 'ArrowLeft')   navigate(-1);
+  if (e.key === 'Escape')     closeCarouselFn();
+  if (e.key === 'ArrowRight') navigate(1);
+  if (e.key === 'ArrowLeft')  navigate(-1);
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────

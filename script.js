@@ -11,13 +11,9 @@ const closeCarousel = document.getElementById('closeCarousel');
 const zoomModal = document.getElementById('zoomModal');
 const zoomImg = document.getElementById('zoomImg');
 const closeZoom = document.getElementById('closeZoom');
-const flipHBtn = document.getElementById('flipH');
-const flipVBtn = document.getElementById('flipV');
 
 let images = MANIFEST_IMAGES;
 let current = 0;
-let flipH = false;
-let flipV = false;
 let zoomState = { scale: 1, x: 0, y: 0 };
 let panning = false;
 let startX = 0;
@@ -29,7 +25,6 @@ function setCarouselImage() {
   img.src = images[current];
   img.alt = `Planche ${current + 1}`;
   img.addEventListener('dblclick', () => openZoom(images[current]));
-  applyFlipToElement(img);
   carouselView.appendChild(img);
 }
 
@@ -81,42 +76,7 @@ function clamp(value, min, max) {
 }
 
 function renderZoomTransform() {
-  const sx = flipH ? -1 : 1;
-  const sy = flipV ? -1 : 1;
-  zoomImg.style.transform = `translate(${zoomState.x}px, ${zoomState.y}px) scale(${sx * zoomState.scale}, ${sy * zoomState.scale})`;
-}
-
-function applyFlipToElement(el) {
-  const sx = flipH ? -1 : 1;
-  const sy = flipV ? -1 : 1;
-  if (el === zoomImg) {
-    renderZoomTransform();
-    return;
-  }
-  el.style.transform = `scale(${sx}, ${sy})`;
-}
-
-function applyCurrentFlip() {
-  const cimg = carouselView.querySelector('img');
-  if (cimg) applyFlipToElement(cimg);
-  if (!zoomModal.classList.contains('hidden')) renderZoomTransform();
-}
-
-function toggleFlipH() {
-  flipH = !flipH;
-  updateFlipUI();
-  applyCurrentFlip();
-}
-
-function toggleFlipV() {
-  flipV = !flipV;
-  updateFlipUI();
-  applyCurrentFlip();
-}
-
-function updateFlipUI() {
-  flipHBtn.dataset.on = flipH ? '1' : '0';
-  flipVBtn.dataset.on = flipV ? '1' : '0';
+  zoomImg.style.transform = `translate(${zoomState.x}px, ${zoomState.y}px) scale(${zoomState.scale})`;
 }
 
 function loadImagesFallback() {
@@ -132,7 +92,6 @@ function init() {
 
   renderThumbs();
   setCarouselImage();
-  updateFlipUI();
 }
 
 prevBtn.addEventListener('click', () => {
@@ -145,8 +104,6 @@ nextBtn.addEventListener('click', () => {
 });
 closeCarousel.addEventListener('click', closeCarouselFn);
 closeZoom.addEventListener('click', closeZoomFn);
-flipHBtn.addEventListener('click', toggleFlipH);
-flipVBtn.addEventListener('click', toggleFlipV);
 
 zoomImg.addEventListener('pointerdown', (e) => {
   panning = true;
@@ -194,8 +151,6 @@ document.addEventListener('keydown', (e) => {
   }
   if (e.key === 'ArrowRight' && !carouselModal.classList.contains('hidden')) nextBtn.click();
   if (e.key === 'ArrowLeft' && !carouselModal.classList.contains('hidden')) prevBtn.click();
-  if (e.key === 'h' || e.key === 'H') toggleFlipH();
-  if (e.key === 'v' || e.key === 'V') toggleFlipV();
 });
 
 /* Portrait lock: try Screen Orientation API only (no transform fallback) */

@@ -5,8 +5,11 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neu
 #app{width:100%;min-height:100vh}
 .site-header{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:8px}
 .site-header h1{margin:0;font-size:18px}
-.controls{display:flex;gap:8px}
-.controls button{background:transparent;border:1px solid rgba(255,255,255,0.08);color:inherit;padding:6px 10px;border-radius:6px}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+.controls button,
+.thumb{background:transparent;border:1px solid rgba(255,255,255,0.08);color:inherit;padding:6px 10px;border-radius:6px;cursor:pointer;touch-action:manipulation}
+.thumb{padding:0;overflow:hidden;position:relative}
+.thumb img{display:block}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px}
 @media(min-width:600px){.grid{grid-template-columns:repeat(5,1fr)}}
 .thumbs img{width:100%;height:110px;object-fit:cover;border-radius:4px;background:#222}
@@ -15,10 +18,11 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neu
 .modal-close{position:fixed;right:12px;top:12px;font-size:26px;background:transparent;border:none;color:#fff}
 .carousel{display:flex;align-items:center;width:100%;max-width:900px;gap:8px}
 .viewport{flex:1;overflow:hidden;height:80vh;display:flex;align-items:center;justify-content:center}
-.viewport img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none}
+.viewport img{max-width:100%;max-height:100%;object-fit:contain;touch-action:none;display:block}
 .nav{background:rgba(255,255,255,0.06);border:none;color:#fff;padding:12px;border-radius:24px;font-size:22px}
 .zoom-area{width:95vw;height:85vh;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .zoom-area img{transform-origin:center center;will-change:transform;max-width:none;max-height:none}
+main{position:relative;z-index:0}
 footer{padding:12px 16px;color:var(--muted);font-size:13px}
 code{background:rgba(255,255,255,0.03);padding:2px 6px;border-radius:4px}
 .empty{margin:0;padding:8px 16px;color:var(--muted)}

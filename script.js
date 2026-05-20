@@ -1,59 +1,191 @@
 const MANIFEST_SHEETS = Array.isArray(window.BOOK_SHEETS) ? window.BOOK_SHEETS : [];
 
-const thumbs = document.getElementById('galleryThumbs');
+const thumbs        = document.getElementById('galleryThumbs');
 const carouselModal = document.getElementById('carouselModal');
-const carouselView = document.getElementById('carouselView');
-const prevBtn = document.getElementById('prev');
-const nextBtn = document.getElementById('next');
+const carouselView  = document.getElementById('carouselView');
+const prevBtn       = document.getElementById('prev');
+const nextBtn       = document.getElementById('next');
 const closeCarousel = document.getElementById('closeCarousel');
-const zoomModal = document.getElementById('zoomModal');
-const zoomImg = document.getElementById('zoomImg');
-const closeZoom = document.getElementById('closeZoom');
 
-let sheets = MANIFEST_SHEETS;
+let sheets  = MANIFEST_SHEETS;
 let current = 0;
-let zoomState = { scale: 1, x: 0, y: 0 };
-let panning = false;
-let startX = 0;
-let startY = 0;
-let activePointers = new Map();
-let pinchState = null;
 
-function setCarouselImage() {
-  carouselView.innerHTML = '';
-  const img = document.createElement('img');
-  const sheet = sheets[current];
-  img.src = sheet.full;
-  img.alt = sheet.name || `Planche ${current + 1}`;
-  img.loading = 'eager';
-  img.decoding = 'async';
-  img.addEventListener('click', () => openZoom(sheet.full));
-  carouselView.appendChild(img);
+// ── Gesture state ─────────────────────────────────────────────────────────────
+let zoom   = { scale: 1, x: 0, y: 0 };
+let ptrs   = new Map();   // pointerId → {x, y}
+let gMode  = 'idle';      // 'idle' | 'swipe' | 'pan' | 'pinch'
+let swipeO = null;        // {x, y} — origin of swipe gesture
+let panO   = null;        // {x, y, ox, oy} — origin + initial translate
+let pinchO = null;        // {dist, scale, x, y, midX, midY}
+
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+
+function applyTransform() {
+  const img = carouselView.querySelector('img');
+  if (img) img.style.transform = `translate(${zoom.x}px,${zoom.y}px) scale(${zoom.scale})`;
 }
+
+function setArrows(show) {
+  prevBtn.classList.toggle('hidden', !show);
+  nextBtn.classList.toggle('hidden', !show);
+}
+
+function resetGesture() {
+  zoom   = { scale: 1, x: 0, y: 0 };
+  ptrs   = new Map();
+  gMode  = 'idle';
+  swipeO = panO = pinchO = null;
+}
+
+function navigate(dir) {
+  current = (current + dir + sheets.length) % sheets.length;
+  loadCurrent();
+}
+
+function loadCurrent() {
+  resetGesture();
+  setArrows(true);
+  carouselView.classList.remove('grabbing');
+
+  const img      = document.createElement('img');
+  const sheet    = sheets[current];
+  img.src        = sheet.full;
+  img.alt        = sheet.name || `Planche ${current + 1}`;
+  img.loading    = 'eager';
+  img.decoding   = 'async';
+  img.draggable  = false;
+  carouselView.replaceChildren(img);
+}
+
+// ── Gesture handlers ──────────────────────────────────────────────────────────
+
+carouselView.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  carouselView.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  setArrows(false);
+  carouselView.classList.add('grabbing');
+
+  if (ptrs.size === 1) {
+    swipeO = { x: e.clientX, y: e.clientY };
+    panO   = { x: e.clientX, y: e.clientY, ox: zoom.x, oy: zoom.y };
+    gMode  = zoom.scale > 1.02 ? 'pan' : 'swipe';
+    pinchO = null;
+  }
+
+  if (ptrs.size === 2) {
+    gMode  = 'pinch';
+    swipeO = null;
+    const [a, b] = [...ptrs.values()];
+    pinchO = {
+      dist:  Math.hypot(b.x - a.x, b.y - a.y) || 1,
+      scale: zoom.scale,
+      x: zoom.x, y: zoom.y,
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+    };
+  }
+});
+
+carouselView.addEventListener('pointermove', (e) => {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (gMode === 'pinch' && pinchO && ptrs.size >= 2) {
+    const [a, b] = [...ptrs.values()];
+    const dist   = Math.hypot(b.x - a.x, b.y - a.y);
+    const midX   = (a.x + b.x) / 2;
+    const midY   = (a.y + b.y) / 2;
+    zoom.scale   = clamp(pinchO.scale * (dist / pinchO.dist), 1, 8);
+    zoom.x       = pinchO.x + (midX - pinchO.midX);
+    zoom.y       = pinchO.y + (midY - pinchO.midY);
+    if (zoom.scale <= 1) { zoom.x = 0; zoom.y = 0; }
+    applyTransform();
+    return;
+  }
+
+  if (gMode === 'pan' && panO) {
+    zoom.x = panO.ox + (e.clientX - panO.x);
+    zoom.y = panO.oy + (e.clientY - panO.y);
+    applyTransform();
+  }
+});
+
+carouselView.addEventListener('pointerup', (e) => {
+  const savedMode  = gMode;
+  const savedSwipe = swipeO;
+  ptrs.delete(e.pointerId);
+  try { carouselView.releasePointerCapture(e.pointerId); } catch (_) {}
+
+  if (ptrs.size === 0) {
+    carouselView.classList.remove('grabbing');
+
+    if (savedMode === 'swipe' && savedSwipe) {
+      const dx = e.clientX - savedSwipe.x;
+      const dy = e.clientY - savedSwipe.y;
+      // Swipe: horizontal dominance + minimum distance
+      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        navigate(dx < 0 ? 1 : -1);
+        return;
+      }
+    }
+
+    setArrows(zoom.scale <= 1);
+    gMode  = 'idle';
+    swipeO = panO = pinchO = null;
+
+  } else if (ptrs.size === 1) {
+    // One finger lifted during pinch → back to pan or swipe with remaining finger
+    pinchO = null;
+    const [pt] = ptrs.values();
+    panO   = { x: pt.x, y: pt.y, ox: zoom.x, oy: zoom.y };
+    swipeO = { x: pt.x, y: pt.y };
+    gMode  = zoom.scale > 1.02 ? 'pan' : 'swipe';
+  }
+});
+
+carouselView.addEventListener('pointercancel', (e) => {
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) {
+    carouselView.classList.remove('grabbing');
+    setArrows(zoom.scale <= 1);
+    gMode  = 'idle';
+    swipeO = panO = pinchO = null;
+  }
+});
+
+// Mouse wheel zoom (desktop)
+carouselView.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  zoom.scale = clamp(zoom.scale * (e.deltaY < 0 ? 1.12 : 0.9), 1, 8);
+  if (zoom.scale <= 1) { zoom.x = 0; zoom.y = 0; }
+  applyTransform();
+  setArrows(zoom.scale <= 1);
+}, { passive: false });
+
+// ── Carousel ──────────────────────────────────────────────────────────────────
 
 function renderThumbs() {
   thumbs.innerHTML = '';
   sheets.forEach((sheet, i) => {
-    const button = document.createElement('button');
-    button.className = 'thumb';
-    button.style.border = 'none';
-    button.style.padding = '0';
+    const btn = document.createElement('button');
+    btn.className = 'thumb';
 
-    const img = document.createElement('img');
-    img.src = sheet.thumb;
-    img.alt = sheet.name || `Planche ${i + 1}`;
-    img.loading = 'lazy';
+    const img    = document.createElement('img');
+    img.src      = sheet.thumb;
+    img.alt      = sheet.name || `Planche ${i + 1}`;
+    img.loading  = 'lazy';
     img.decoding = 'async';
     img.addEventListener('click', () => openCarousel(i));
 
-    button.appendChild(img);
-    thumbs.appendChild(button);
+    btn.appendChild(img);
+    thumbs.appendChild(btn);
   });
 }
 
 function openCarousel(index) {
   current = index;
-  setCarouselImage();
+  loadCurrent();
   carouselModal.classList.remove('hidden');
   carouselModal.setAttribute('aria-hidden', 'false');
 }
@@ -63,155 +195,25 @@ function closeCarouselFn() {
   carouselModal.setAttribute('aria-hidden', 'true');
 }
 
-function openZoom(src) {
-  closeCarouselFn();
-  zoomImg.src = src;
-  zoomState = { scale: 1, x: 0, y: 0 };
-  activePointers = new Map();
-  pinchState = null;
-  renderZoomTransform();
-  zoomModal.classList.remove('hidden');
-}
+prevBtn.addEventListener('click', () => navigate(-1));
+nextBtn.addEventListener('click', () => navigate(1));
+closeCarousel.addEventListener('click', closeCarouselFn);
 
-function closeZoomFn() {
-  zoomModal.classList.add('hidden');
-}
+document.addEventListener('keydown', (e) => {
+  if (carouselModal.classList.contains('hidden')) return;
+  if (e.key === 'Escape')      closeCarouselFn();
+  if (e.key === 'ArrowRight')  navigate(1);
+  if (e.key === 'ArrowLeft')   navigate(-1);
+});
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function renderZoomTransform() {
-  zoomImg.style.transform = `translate(${zoomState.x}px, ${zoomState.y}px) scale(${zoomState.scale})`;
-}
-
-function loadImagesFallback() {
-  sheets = [];
-  thumbs.innerHTML = '<p class="empty">Aucune planche trouvée dans <code>images/Siv</code>.</p>';
-}
+// ── Init ──────────────────────────────────────────────────────────────────────
 
 function init() {
   if (!sheets.length) {
-    loadImagesFallback();
+    thumbs.innerHTML = '<p class="empty">Aucune planche trouvée dans <code>images/Siv</code>.</p>';
     return;
   }
-
   renderThumbs();
-  setCarouselImage();
-}
-
-prevBtn.addEventListener('click', () => {
-  current = (current - 1 + sheets.length) % sheets.length;
-  setCarouselImage();
-});
-nextBtn.addEventListener('click', () => {
-  current = (current + 1) % sheets.length;
-  setCarouselImage();
-});
-closeCarousel.addEventListener('click', closeCarouselFn);
-closeZoom.addEventListener('click', closeZoomFn);
-
-function updateZoomFromPointers() {
-  if (activePointers.size < 2 || !pinchState) return;
-  const pts = Array.from(activePointers.values());
-  const [a, b] = pts;
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const dist = Math.hypot(dx, dy);
-  const midX = (a.x + b.x) / 2;
-  const midY = (a.y + b.y) / 2;
-
-  zoomState.scale = clamp(pinchState.scale * (dist / pinchState.dist), 1, 6);
-  zoomState.x = pinchState.x + (midX - pinchState.midX);
-  zoomState.y = pinchState.y + (midY - pinchState.midY);
-  renderZoomTransform();
-}
-
-zoomImg.addEventListener('pointerdown', (e) => {
-  zoomImg.setPointerCapture(e.pointerId);
-  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (activePointers.size === 1) {
-    panning = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    pinchState = null;
-  }
-  if (activePointers.size === 2) {
-    const pts = Array.from(activePointers.values());
-    const [a, b] = pts;
-    pinchState = {
-      dist: Math.hypot(b.x - a.x, b.y - a.y) || 1,
-      scale: zoomState.scale,
-      x: zoomState.x,
-      y: zoomState.y,
-      midX: (a.x + b.x) / 2,
-      midY: (a.y + b.y) / 2,
-    };
-    panning = false;
-  }
-});
-
-zoomImg.addEventListener('pointermove', (e) => {
-  if (!activePointers.has(e.pointerId)) return;
-  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (activePointers.size === 2 && pinchState) {
-    updateZoomFromPointers();
-    return;
-  }
-  if (!panning || activePointers.size !== 1) return;
-  const dx = e.clientX - startX;
-  const dy = e.clientY - startY;
-  zoomState.x += dx;
-  zoomState.y += dy;
-  startX = e.clientX;
-  startY = e.clientY;
-  renderZoomTransform();
-});
-
-zoomImg.addEventListener('pointerup', (e) => {
-  activePointers.delete(e.pointerId);
-  if (activePointers.size < 2) pinchState = null;
-  if (activePointers.size === 0) panning = false;
-  try {
-    zoomImg.releasePointerCapture(e.pointerId);
-  } catch (_) {
-    // noop
-  }
-});
-
-zoomImg.addEventListener('pointercancel', (e) => {
-  activePointers.delete(e.pointerId);
-  if (activePointers.size < 2) pinchState = null;
-  if (activePointers.size === 0) panning = false;
-});
-
-zoomImg.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const delta = -e.deltaY * 0.0012;
-  zoomState.scale = clamp(zoomState.scale + delta, 1, 6);
-  renderZoomTransform();
-}, { passive: false });
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (!carouselModal.classList.contains('hidden')) closeCarouselFn();
-    if (!zoomModal.classList.contains('hidden')) closeZoomFn();
-  }
-  if (e.key === 'ArrowRight' && !carouselModal.classList.contains('hidden')) nextBtn.click();
-  if (e.key === 'ArrowLeft' && !carouselModal.classList.contains('hidden')) prevBtn.click();
-});
-
-/* Portrait lock: try Screen Orientation API only (no transform fallback) */
-async function enforcePortraitLock() {
-  try {
-    if (screen.orientation && screen.orientation.lock) {
-      await screen.orientation.lock('portrait');
-      return;
-    }
-  } catch (e) {
-    // not available / not allowed
-  }
 }
 
 init();
-enforcePortraitLock();
